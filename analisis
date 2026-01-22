@@ -1,0 +1,63 @@
+import pandas as pd
+import numpy as np
+
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.pipeline import Pipeline
+
+from sklearn.svm import LinearSVC
+from sklearn.linear_model import LogisticRegression
+from sklearn.naive_bayes import GaussianNB
+from sklearn.tree import DecisionTreeClassifier
+
+from sklearn.metrics import accuracy_score, classification_report
+# Cargar reseñas
+df = pd.read_csv("reviews.csv")  # <-- cambia si tu archivo se llama distinto
+
+# Ejemplo de columnas esperadas
+X = df["review"]       # texto
+y = df["sentiment"]    # etiqueta
+y = y.map({"positive": 1, "negative": 0})
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+results = {}
+
+for name, model in models.items():
+    pipeline = Pipeline([
+        ("tfidf", TfidfVectorizer(stop_words="english", max_features=5000)),
+        ("clf", model)
+    ])
+
+    pipeline.fit(X_train, y_train)
+    y_pred = pipeline.predict(X_test)
+
+    acc = accuracy_score(y_test, y_pred)
+    results[name] = acc
+
+    print(f"\n📌 {name}")
+    print("Accuracy:", acc)
+    print(classification_report(y_test, y_pred))
+# Vectorización
+vectorizer = TfidfVectorizer(stop_words="english", max_features=5000)
+
+X_train_vec = vectorizer.fit_transform(X_train).toarray()
+X_test_vec = vectorizer.transform(X_test).toarray()
+
+gnb = GaussianNB()
+gnb.fit(X_train_vec, y_train)
+
+y_pred_gnb = gnb.predict(X_test_vec)
+
+acc_gnb = accuracy_score(y_test, y_pred_gnb)
+results["GaussianNB"] = acc_gnb
+
+print("\n📌 Gaussian Naive Bayes")
+print("Accuracy:", acc_gnb)
+print(classification_report(y_test, y_pred_gnb))
+comparison = pd.DataFrame.from_dict(
+    results, orient="index", columns=["Accuracy"]
+).sort_values(by="Accuracy", ascending=False)
+
+print("\n🏆 Comparación de modelos")
+print(comparison)
